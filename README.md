@@ -53,7 +53,8 @@ cd Learn-Yocto-Project
 ```
 
 This will build and start both Yocto and NFS containers. After that, the Yocto container will be activated in your terminal.
-The container will be automatically shutdown when you exit the terminal.
+
+The container will be automatically shutdown when you exit the terminal. Container settings and data are also preserved (stopped, not removed). To reset the container, run `rebuild_yocto.sh`.
 
 Inside the container, you will be logged in as user `yocto` (password: `yocto`).
 
@@ -86,7 +87,7 @@ cd Learn-Yocto-Project/remote-setup
 ./run_yocto.sh
 ```
 
-This will build and start Yocto container on the remote server. The container will be activated in your terminal. It will be automatically shutdown when you exit the terminal.
+This will build and start Yocto container on the remote server. The container will be activated in your terminal. It will be automatically shutdown when you exit the terminal. Container settings and data are also preserved (stopped, not removed). To reset the container, run `rebuild_yocto.sh`.
 
 Inside the container, you will be logged in as user `yocto` (password: `yocto`).
 
