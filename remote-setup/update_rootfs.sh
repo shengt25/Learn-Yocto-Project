@@ -4,7 +4,7 @@ set -e
 # Some config, normally don't need to change
 REMOTE_CONTAINER="yocto-dev-yocto-1"
 LOCAL_CONTAINER="nfs-server"
-IMAGE_NAME_PREFIX="core-image-minimal"
+DEFAULT_IMAGE_NAME_PREFIX="core-image-minimal"
 IMAGE_SUFFIX="-beaglebone.rootfs.tar.xz"
 IMAGE_BASE_DIR="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone"
 TRANSFER_TMP_DIR="/tmp/rootfs-transfer-tmp-h3j3M2n2b1L6d1"   # a unique name, to avoid conflicts
@@ -55,7 +55,7 @@ update_rootfs() {
     local TRANSFER_START_TIME
     TRANSFER_START_TIME=$(date +%s)
 
-    # Transfer the file directly to transfer directory, follow the symlinks
+    # Transfer the file to transfer directory, follow the symlinks
     if ssh "$REMOTE_HOST" "docker cp -L $REMOTE_CONTAINER:$IMAGE_PATH -" | \
         docker cp - "$LOCAL_CONTAINER:$TRANSFER_TMP_DIR/"; then
         echo "Transfer in progress..."
@@ -127,7 +127,7 @@ main() {
                 exit 0
                 ;;
             -i)
-                IMAGE_NAME_PREFIX="$2"
+                DEFAULT_IMAGE_NAME_PREFIX="$2"
                 shift 2
                 ;;
             -y)
@@ -147,7 +147,7 @@ main() {
     fi
 
     # Build IMAGE_PATH after parsing all arguments
-    IMAGE_PATH="${IMAGE_BASE_DIR}/${IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
+    IMAGE_PATH="${IMAGE_BASE_DIR}/${DEFAULT_IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
 
     update_rootfs "$SKIP_CONFIRM"
 }
