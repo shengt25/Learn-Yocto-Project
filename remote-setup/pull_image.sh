@@ -3,7 +3,9 @@ set -e
 
 # Some configuration, normally don't need to change
 REMOTE_CONTAINER="yocto-dev-yocto-1"
-IMAGE_PATH="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone/core-image-minimal-beaglebone.rootfs.wic.xz"
+IMAGE_NAME_PREFIX="core-image-minimal"
+IMAGE_SUFFIX="-beaglebone.rootfs.wic.xz"
+IMAGE_BASE_DIR="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone"
 
 show_help() {
     cat << EOF
@@ -15,8 +17,10 @@ Arguments:
     REMOTE_HOST    SSH host (e.g., 'user@hostname')
 
 Options:
-    -y             Skip confirmation if file exists
-    -h, --help     Show this help message
+    -i IMAGE_PREFIX    Specify image name prefix (default: core-image-minimal)
+                       Full image name will be: <prefix>-beaglebone.rootfs.wic.xz
+    -y                 Skip confirmation if file exists
+    -h, --help         Show this help message
 
 EOF
 }
@@ -73,6 +77,10 @@ main() {
                 show_help
                 exit 0
                 ;;
+            -i)
+                IMAGE_NAME_PREFIX="$2"
+                shift 2
+                ;;
             -y)
                 SKIP_CONFIRM="y"
                 shift
@@ -88,6 +96,9 @@ main() {
         echo "Error: REMOTE_HOST is required"
         show_help
     fi
+
+    # Build IMAGE_PATH after parsing all arguments
+    IMAGE_PATH="${IMAGE_BASE_DIR}/${IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
 
     pull_image "$SKIP_CONFIRM"
 }

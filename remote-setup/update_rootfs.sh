@@ -4,7 +4,9 @@ set -e
 # Some config, normally don't need to change
 REMOTE_CONTAINER="yocto-dev-yocto-1"
 LOCAL_CONTAINER="nfs-server"
-IMAGE_PATH="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone/core-image-minimal-beaglebone.rootfs.tar.xz"
+IMAGE_NAME_PREFIX="core-image-minimal"
+IMAGE_SUFFIX="-beaglebone.rootfs.tar.xz"
+IMAGE_BASE_DIR="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone"
 TRANSFER_TMP_DIR="/tmp/rootfs-transfer-tmp-h3j3M2n2b1L6d1"   # a unique name, to avoid conflicts
 
 show_help() {
@@ -17,8 +19,10 @@ Arguments:
     REMOTE_HOST    SSH host (e.g., 'user@hostname')
 
 Options:
-    -y             Skip confirmation prompt
-    -h, --help     Show this help message
+    -i IMAGE_PREFIX    Specify image name prefix (default: core-image-minimal)
+                       Full image name will be: <prefix>-beaglebone.rootfs.tar.xz
+    -y                 Skip confirmation prompt
+    -h, --help         Show this help message
 
 EOF
 }
@@ -28,7 +32,8 @@ update_rootfs() {
     local IMAGE_FILENAME
     IMAGE_FILENAME=$(basename "$IMAGE_PATH")
 
-    echo "Fetching rootfs image to /tmp of local NFS container..."
+    echo "Fetching rootfs image: ${IMAGE_FILENAME}"
+    echo "Transferring to /tmp of local NFS container..."
 
     # Prepare a clean dedicated transfer directory, to find the correct filename easily.
     # Because of symlinks, the transferred filename will be different from IMAGE_FILENAME.
@@ -90,6 +95,10 @@ main() {
                 show_help
                 exit 0
                 ;;
+            -i)
+                IMAGE_NAME_PREFIX="$2"
+                shift 2
+                ;;
             -y)
                 SKIP_CONFIRM="y"
                 shift
@@ -105,6 +114,9 @@ main() {
         echo "Error: REMOTE_HOST is required"
         show_help
     fi
+
+    # Build IMAGE_PATH after parsing all arguments
+    IMAGE_PATH="${IMAGE_BASE_DIR}/${IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
 
     update_rootfs "$SKIP_CONFIRM"
 }
