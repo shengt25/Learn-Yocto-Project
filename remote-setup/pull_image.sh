@@ -3,7 +3,7 @@ set -e
 
 # Some configuration, normally don't need to change
 REMOTE_CONTAINER="yocto-dev-yocto-1"
-IMAGE_NAME_PREFIX="core-image-minimal"
+DEFAULT_IMAGE_NAME_PREFIX="core-image-minimal"
 IMAGE_SUFFIX="-beaglebone.rootfs.wic.xz"
 IMAGE_BASE_DIR="/home/yocto/yocto-labs/build/tmp/deploy/images/beaglebone"
 
@@ -50,6 +50,17 @@ pull_image() {
 
     local PART_FILENAME="${IMAGE_FILENAME}.part"
 
+    # Cleanup function to remove incomplete .part file
+    cleanup() {
+        if [[ -f "$PART_FILENAME" ]]; then
+            echo "Cleaning up incomplete download..."
+            rm -f "$PART_FILENAME"
+        fi
+    }
+
+    # Set trap to cleanup on exit, interrupt (Ctrl+C), or termination
+    trap cleanup EXIT INT TERM
+
     # Transfer to .part file first
     if ssh "$REMOTE_HOST" "docker cp -L $REMOTE_CONTAINER:$IMAGE_PATH -" | tar -xO > "$PART_FILENAME"; then
         echo "Transfer in progress..."
@@ -57,12 +68,14 @@ pull_image() {
         # Check if downloaded file is empty
         if [[ ! -s "$PART_FILENAME" ]]; then
             echo "Error: Downloaded file is empty (0 bytes)"
-            rm -f "$PART_FILENAME"
             exit 1
         fi
 
         # Move .part file to final filename on success
         mv "$PART_FILENAME" "$IMAGE_FILENAME"
+
+        # Cancel trap after successful transfer
+        trap - EXIT INT TERM
 
         local TRANSFER_END_TIME
         TRANSFER_END_TIME=$(date +%s)
@@ -77,7 +90,6 @@ pull_image() {
         echo "Done! File saved to: $(pwd)/$IMAGE_FILENAME"
     else
         echo "Error: Transfer failed"
-        rm -f "$PART_FILENAME"
         exit 1
     fi
 }
@@ -97,7 +109,7 @@ main() {
                 exit 0
                 ;;
             -i)
-                IMAGE_NAME_PREFIX="$2"
+                DEFAULT_IMAGE_NAME_PREFIX="$2"
                 shift 2
                 ;;
             -y)
@@ -117,7 +129,7 @@ main() {
     fi
 
     # Build IMAGE_PATH after parsing all arguments
-    IMAGE_PATH="${IMAGE_BASE_DIR}/${IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
+    IMAGE_PATH="${IMAGE_BASE_DIR}/${DEFAULT_IMAGE_NAME_PREFIX}${IMAGE_SUFFIX}"
 
     pull_image "$SKIP_CONFIRM"
 }
