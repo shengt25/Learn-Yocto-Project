@@ -121,7 +121,12 @@ If you want to pull built images (`wic.xz` format) to your local machine, which 
 ```bash
 ./pull_image.sh <remote-user>@<remote-ip>
 ```
+Options:  
+```
+Use `-i` to specify image name prefix. Full image name will be <prefix>-beaglebone.rootfs.tar.xz (default prefix: core-image-minimal).   
+Use `-y` to Skip confirmation prompt.  
 Use `-h` flag for help.
+```
 
 **Update Root Filesystem:**
 
@@ -130,7 +135,13 @@ If you want to directly update the root filesystem served by the local NFS serve
 ./update_rootfs.sh <remote-user>@<remote-ip>
 ```
 This will fetch the latest root filesystem from the remote server's container and update it to the local NFS container.
+
+Options:  
+```
+Use `-i` to specify image name prefix. Full image name will be <prefix>-beaglebone.rootfs.wic.xz (default prefix: core-image-minimal).   
+Use `-y` to Skip confirmation prompt.  
 Use `-h` flag for help.
+```
 
 ## Acknowledgements
 This project follows Bootlin's Yocto Project training materials.
