@@ -1,31 +1,50 @@
 # Yocto Docker Development Environment
 
-A containerized environment for learning Yocto Project and OpenEmbedded development, based on Bootlin's training materials.
+Building Yocto Project requires numerous files, dependencies, and a Linux environment. This project provides a ready-to-use containerized setup that works out of the box and keeps your host system clean:
+- A Yocto container for building 
+- A NFS server container to serve the target root filesystem. 
 
-## Why Use This?
+What's more. These two containers can be setup on two hosts, which means a split workflow that you can: 
+- build on a powerful remote machine
+- serving the NFS rootfs on your computer locally. 
 
-Building Yocto Project requires numerous files, dependencies, and a Linux environment. This project provides a ready-to-use containerized setup that:
-- Works out of the box
-- Keeps your host system clean
-- Follows Bootlin's training materials
+The default target is Beaglebone Black, so you can use it to follow Bootlin’s Yocto training materials, but the environment is generic and not limited to that use case.
 
-Currently supports macOS and Linux, with BeagleBone Black as the target hardware platform. Feel free to modify for your own hardware, or wait for future updates with more flexible configuration.
+Currently the scripts are only for Linux and macOS. On windows you can use `docker compose` command manually for now.
 
+It has persistent volumes for builds, NFS data, and user data. Don't worry about resetting the containers.
 
-## Lab Environment Setup
-
-### Requirements
+## Requirements
 - Docker and Docker Compose installed
-- For Yocto builds: At least 100GB of free disk space
-- For scripts, they are supported on Linux or macOS. For Windows consider using WSL2, or you can run the containers manually using Docker commands.
-  
+- At least 100GB of free disk space for Yocto building. 
+- `nfs` and `nfsd` module enabled, see below.
+
+`nfs` and `nfsd` module are needed for the nfs server container. On your host machine check with:
+
+```bash
+lsmod | grep nfs
+```
+
+If you couldn't find `nfs` and `nfsd`, enable them using:
+
+```bash
+sudo modprobe nfs 
+sudo modprobe nfsd
+```
+
+Run the first command again to check it is enabled.
+
+## Setup
+
 ### Overview
-This repository provides a Dockerized development environment consisting of two containers:
+The Docker Compose will build and run:
+
+Two containers:
 
 1. Yocto Development Environment based on Ubuntu 22.04 with necessary dependencies pre-installed
 2. NFS Server providing root filesystem for the target device over network
 
-The containers use three Docker volumes for data persistence:
+Three Docker volumes for data persistence:
 
 - `yocto-data` - Stores Yocto lab data and build artifacts
 - `yocto-nfs` - Stores NFS server root filesystem data
@@ -35,25 +54,14 @@ The containers use three Docker volumes for data persistence:
 
 Two options are available:
 1. **Local Setup**: Run both Yocto and NFS containers on the same machine
-2. **Remote Setup**: Run Yocto container on a remote server and NFS container locally. This is useful if your local machine has limited resources but you have access to a more powerful remote server
+2. **Remote Setup**: Run Yocto container on a powerful remote server and NFS container runs locally.
 
-The details for each option are provided below.
+Notes For both option:
 
-#### For Both Options
-
-These are some notes to keep in mind, for both options.
-
-**Yocto development container**
-
-- The container will be automatically shutdown when you exit the terminal of Yocto development container. All settings and data are preserved (container is stopped, not removed). To reset the container, run `rebuild_yocto.sh`.
-
-- Inside the container, you will be logged in as user `yocto` (password: `yocto`).
-- The `/nfs` directory is already mounted inside the Yocto container, so don't worry about the NFS setup in labs. Follow the rest of the tutorial to build images.
-
-**NFS server**
-
-- We are using NFSv4 while the labs uses NFSv3. When configuring the NFS mount on the target device, simply change `nfsvers=3` to `nfsvers=4`, when appending mount options in `extlinux/extlinux.conf.`
-- You might need to change your firewall settings to let the NFS server accept incoming connections (from beaglebone). See Firewall Settings.
+- The user and password for Yocto container is `yocto` and `yocto`.
+- The nfs serving directory is mounted at `/nfs` in Yocto container.
+- The nfs container servers NFSv4. On the target board, make sure it is `nfsvers=4`, not `nfsvers=3`, in the `extlinux/extlinux.conf.`
+- You might need to change your firewall settings to open port `2049` for `nfsd`, letting the NFS server accept incoming connections from the target board.
 
 #### Option 1: Local Setup
 ```
@@ -144,7 +152,6 @@ Use `-h` flag for help.
 ```
 
 ## Acknowledgements
-This project follows Bootlin's Yocto Project training materials.
 
 The NFS server container is based on [obeone/docker-nfs-server](https://github.com/obeone/docker-nfs-server), which is forked and improved upon [ehough/docker-nfs-server](https://github.com/ehough/docker-nfs-server)
 
