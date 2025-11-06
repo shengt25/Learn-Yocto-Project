@@ -34,9 +34,9 @@ sudo modprobe nfsd
 
 Run the first command again to check it is enabled.
 
-## Setup
 
-### Overview
+## Components
+
 The Docker Compose will build and run:
 
 Two containers:
@@ -50,14 +50,15 @@ Three Docker volumes for data persistence:
 - `yocto-nfs` - Stores NFS server root filesystem data
 - `yocto-user` - Stores user configuration in the Yocto container
 
-### Setup
+## Setup
+
 
 Two options are available:
 1. **Local Setup**: Run both Yocto and NFS containers on the same machine
 2. **Remote Setup**: Run Yocto container on a powerful remote server and NFS container runs locally.
 
 
-#### Option 1: Local Setup
+### Option 1: Local Setup
 
 ```
 ┌───────────────────────────────────────────┐      ┌──────────────┐
@@ -80,9 +81,9 @@ cd yocto-docker
 
 This will build and start both Yocto and NFS containers. After that, the Yocto container will be activated in your terminal.
 
-The container will be stopped when you exit the Yocto container terminal. 
+The container will be stopped when you exit the Yocto container terminal. All settings and data are preserved (container is stopped, not removed).
 
-#### Option 2: Remote Setup
+### Option 2: Remote Setup
 
 ```
 ┌─────────────────────┐                   ┌──────────────────┐      ┌──────────────┐
@@ -109,7 +110,9 @@ cd yocto-docker/remote-setup
 
 This will build and start Yocto container on the remote server. The container will be activated in your terminal.
 
-The container will be stopped when you exit the Yocto container terminal. 
+The nfs serving directory is mounted at `/nfs` in Yocto container.
+
+The container will be stopped when you exit the Yocto container terminal. All settings and data are preserved (container is stopped, not removed).
 
 **On Local Machine:**
 
@@ -150,6 +153,11 @@ Use `-y` to Skip confirmation prompt.
 Use `-h` flag for help.
 ```
 
+## Notes
+- The user and password for Yocto container is `yocto` and `yocto`.
+- The nfs container servers NFSv4. On the target board, make sure it is `nfsvers=4`, not `nfsvers=3`, in the `extlinux/extlinux.conf.`
+- You might need to change your firewall settings to open port `2049` for `nfsd`, letting the NFS server accept incoming connections from the target board.
+- To reset the container, run `rebuild_yocto.sh`. However, the volumns are always preserved unless you delete them exciplity via `docker volume rm yocto-data yocto-nfs yocto-user`.
 ## Acknowledgements
 
 The NFS server container is based on [obeone/docker-nfs-server](https://github.com/obeone/docker-nfs-server), which is forked and improved upon [ehough/docker-nfs-server](https://github.com/ehough/docker-nfs-server)
